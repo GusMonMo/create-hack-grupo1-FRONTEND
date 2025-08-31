@@ -1,0 +1,646 @@
+{
+  "info": {
+    "name": "YouTube Video Service Tests",
+    "description": "Test collection for YouTube video indexing service with Supabase backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "supabase_url",
+      "value": "https://your-project.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "supabase_anon_key",
+      "value": "your-supabase-anon-key",
+      "type": "string"
+    },
+    {
+      "key": "youtube_api_key",
+      "value": "your-youtube-api-key",
+      "type": "string"
+    },
+    {
+      "key": "test_video_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_collection_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "YouTube Videos",
+      "item": [
+        {
+          "name": "Get All Videos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/youtube_videos?is_active=eq.true&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "youtube_videos"],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "eq.true"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Video",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has video data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson[0]).to.have.property('id');",
+                  "    pm.expect(responseJson[0]).to.have.property('youtube_video_id');",
+                  "    pm.expect(responseJson[0]).to.have.property('title');",
+                  "    ",
+                  "    // Store the video ID for other tests",
+                  "    pm.collectionVariables.set('test_video_id', responseJson[0].id);",
+                  "});",
+                  "",
+                  "pm.test('YouTube URL is valid', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson[0].youtube_url).to.include('youtube.com/watch');",
+                  "    pm.expect(responseJson[0].youtube_video_id).to.have.lengthOf(11);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Video - Sunday Service\",\n  \"description\": \"Test video for Postman collection\",\n  \"youtube_url\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"youtube_video_id\": \"dQw4w9WgXcQ\",\n  \"thumbnail_url\": \"https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg\",\n  \"category\": \"test\",\n  \"tags\": [\"test\", \"postman\", \"service\"],\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/youtube_videos",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "youtube_videos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Video by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct video', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson[0]).to.have.property('id', pm.collectionVariables.get('test_video_id'));",
+                  "    pm.expect(responseJson[0]).to.have.property('title');",
+                  "    pm.expect(responseJson[0]).to.have.property('is_active', true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/youtube_videos?id=eq.{{test_video_id}}&is_active=eq.true",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "youtube_videos"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{test_video_id}}"
+                },
+                {
+                  "key": "is_active",
+                  "value": "eq.true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Video",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Video was updated', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson[0]).to.have.property('title', 'Updated Test Video Title');",
+                  "    pm.expect(responseJson[0]).to.have.property('description', 'Updated description via Postman');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Test Video Title\",\n  \"description\": \"Updated description via Postman\",\n  \"category\": \"updated-test\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/youtube_videos?id=eq.{{test_video_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "youtube_videos"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{test_video_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft Delete Video",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Video was soft deleted', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson[0]).to.have.property('is_active', false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/youtube_videos?id=eq.{{test_video_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "youtube_videos"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{test_video_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Video Collections",
+      "item": [
+        {
+          "name": "Get All Collections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/video_collections?order=display_order.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "video_collections"],
+              "query": [
+                {
+                  "key": "order",
+                  "value": "display_order.asc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Collection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Collection was created', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson[0]).to.have.property('id');",
+                  "    pm.expect(responseJson[0]).to.have.property('name', 'Test Collection');",
+                  "    pm.expect(responseJson[0]).to.have.property('is_public', true);",
+                  "    ",
+                  "    // Store collection ID for other tests",
+                  "    pm.collectionVariables.set('test_collection_id', responseJson[0].id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Collection\",\n  \"description\": \"Test collection for Postman testing\",\n  \"is_public\": true,\n  \"display_order\": 0\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/video_collections",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "video_collections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Collection with Videos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/video_collections?id=eq.{{test_collection_id}}&select=*,collection_videos(display_order,youtube_videos(*))",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "video_collections"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{test_collection_id}}"
+                },
+                {
+                  "key": "select",
+                  "value": "*,collection_videos(display_order,youtube_videos(*))"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "YouTube API Tests",
+      "item": [
+        {
+          "name": "Get Video Metadata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has video metadata', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('items');",
+                  "    pm.expect(responseJson.items).to.be.an('array');",
+                  "    ",
+                  "    if (responseJson.items.length > 0) {",
+                  "        const video = responseJson.items[0];",
+                  "        pm.expect(video).to.have.property('snippet');",
+                  "        pm.expect(video).to.have.property('statistics');",
+                  "        pm.expect(video).to.have.property('contentDetails');",
+                  "        pm.expect(video.snippet).to.have.property('title');",
+                  "        pm.expect(video.snippet).to.have.property('description');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=dQw4w9WgXcQ&key={{youtube_api_key}}",
+              "protocol": "https",
+              "host": ["www", "googleapis", "com"],
+              "path": ["youtube", "v3", "videos"],
+              "query": [
+                {
+                  "key": "part",
+                  "value": "snippet,statistics,contentDetails"
+                },
+                {
+                  "key": "id",
+                  "value": "dQw4w9WgXcQ"
+                },
+                {
+                  "key": "key",
+                  "value": "{{youtube_api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Multiple Video IDs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has multiple videos', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('items');",
+                  "    pm.expect(responseJson.items).to.be.an('array');",
+                  "    pm.expect(responseJson.items.length).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=dQw4w9WgXcQ,M7lc1UVf-VE&key={{youtube_api_key}}",
+              "protocol": "https",
+              "host": ["www", "googleapis", "com"],
+              "path": ["youtube", "v3", "videos"],
+              "query": [
+                {
+                  "key": "part",
+                  "value": "snippet,statistics,contentDetails"
+                },
+                {
+                  "key": "id",
+                  "value": "dQw4w9WgXcQ,M7lc1UVf-VE"
+                },
+                {
+                  "key": "key",
+                  "value": "{{youtube_api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "URL Validation Tests",
+      "item": [
+        {
+          "name": "Test Valid YouTube URLs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Test YouTube URL validation logic",
+                  "const testUrls = [",
+                  "    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',",
+                  "    'https://youtu.be/dQw4w9WgXcQ',",
+                  "    'https://www.youtube.com/embed/dQw4w9WgXcQ',",
+                  "    'https://www.youtube.com/v/dQw4w9WgXcQ'",
+                  "];",
+                  "",
+                  "function extractYouTubeVideoId(url) {",
+                  "    const patterns = [",
+                  "        /(?:youtube\\.com\\/watch\\?v=|youtu\\.be\\/|youtube\\.com\\/embed\\/|youtube\\.com\\/v\\/)([^&\\n?#]+)/,",
+                  "        /youtube\\.com\\/watch\\?.*v=([^&\\n?#]+)/",
+                  "    ];",
+                  "    ",
+                  "    for (const pattern of patterns) {",
+                  "        const match = url.match(pattern);",
+                  "        if (match && match[1]) {",
+                  "            return match[1];",
+                  "        }",
+                  "    }",
+                  "    return null;",
+                  "}",
+                  "",
+                  "testUrls.forEach((url, index) => {",
+                  "    const videoId = extractYouTubeVideoId(url);",
+                  "    console.log(`URL ${index + 1}: ${url} -> Video ID: ${videoId}`);",
+                  "    pm.expect(videoId).to.equal('dQw4w9WgXcQ', `Failed to extract video ID from ${url}`);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/status/200",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["status", "200"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Running test for:', pm.info.requestName);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
